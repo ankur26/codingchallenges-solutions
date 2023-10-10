@@ -10,4 +10,4 @@ This is my attempt at the challenges.
 Each folder will have a README to explain how to setup the code on your local device if you want to play around with it, also there will some additional notes to document the learnings of the challenge.
 
 ## Challenges
-1. Write own `wc` tool - in progress. [Link](https://github.com/ankur26/codingchallenges-solutions/tree/main/ccwc) (Bun, Typescript)
+1. Write own `wc` tool - Minimum specified on challenge completed. [Link](https://github.com/ankur26/codingchallenges-solutions/tree/main/ccwc) (Bun, Typescript)
