@@ -7,7 +7,7 @@ This is my attempt at the challenges.
 
 
 ## Folder structure (work in progress)
-Each folder will have a build file and a README to explain the solution, also will include test files which are provided by the author, and a test runner.
+Each folder will have a README to explain how to setup the code on your local device if you want to play around with it, also there will some additional notes to document the learnings of the challenge.
 
 ## Challenges
 1. Write own `wc` tool - in progress. [Link](https://github.com/ankur26/codingchallenges-solutions/tree/main/ccwc)
