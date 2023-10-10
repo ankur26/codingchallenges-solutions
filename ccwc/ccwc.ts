@@ -16,45 +16,60 @@ interface WCOutputInterface {
   words: number;
 }
 
-async function doWC(filenames:Array<string>=[],stdinOnly:boolean=false):Promise<Array<WCOutputInterface>>{
-    const fileproperties: Array<WCOutputInterface> = [];
-    if (stdinOnly){
-        filenames = [""]; // Just substitute a dummy variable so that you don't
-    }
-    for (let file of filenames) {
-        const tempfileoutput: WCOutputInterface = {
-          filename: file,
-          lines: -1,
-          bytes: 0,
-          words: 0,
-          chars: 0,
-          "max-line-length": 0,
-        };
-        try {
-          const fpointer = stdinOnly ? Bun.stdin :Bun.file(file);
-          if (await fpointer.exists()) {
-            tempfileoutput.bytes = fpointer.size;
-            const text = await fpointer.text();
-            tempfileoutput.chars += text.length;
-            for (let line of text.split("\n")) {
-                tempfileoutput.lines+=1;
-                if (line.length > tempfileoutput["max-line-length"]){
-                    tempfileoutput["max-line-length"] = line.length;
-                  }
-              tempfileoutput.words += line.split(/\s|\t/).filter(w=>w!=="").length;
+async function doWC(
+  filenames: Array<string> = [],
+  stdinOnly: boolean = false
+): Promise<Array<WCOutputInterface>> {
+  const fileproperties: Array<WCOutputInterface> = [];
+  if (stdinOnly) {
+    filenames = [""]; // Just substitute a dummy variable so that you don't
+  }
+  for (let file of filenames) {
+    const tempfileoutput: WCOutputInterface = {
+      filename: file,
+      lines: -1,
+      bytes: 0,
+      words: 0,
+      chars: 0,
+      "max-line-length": 0,
+    };
+    try {
+      const fpointer = Bun.file(file);
+      const stdinPointer = Bun.stdin;
+      tempfileoutput.bytes = !stdinOnly ? fpointer.size : 0;
+      let text = undefined
       
-            }
-            fileproperties.push(tempfileoutput);
-          } else {
-            throw new Error(`${file} does not exist`);
-          }
-        } catch (err) {
-          console.error(err);
-          process.exit(1);
+      if(!stdinOnly){
+        text = await fpointer.exists() ? await fpointer.text() : text;
+      }else{
+        text = "";
+        // text = text.concat(await Bun.readableStreamToText(stdinPointer.readable))
+        for await(const chunk of stdinPointer.stream()){
+            tempfileoutput.bytes += chunk.byteLength;
+            text = text.concat(Buffer.from(chunk).toString());
         }
+        // console.log(text)
       }
-      return fileproperties;
-      
+      if (text) {
+        // console.log(text);
+        tempfileoutput.chars += text.length;
+        for (let line of text.split("\n")) {
+          tempfileoutput.lines += 1;
+          if (line.length > tempfileoutput["max-line-length"]) {
+            tempfileoutput["max-line-length"] = line.length;
+          }
+          tempfileoutput.words += line
+            .split(/\s|\t/)
+            .filter((w) => w !== "").length;
+        }
+        fileproperties.push(tempfileoutput);
+      }
+    } catch (err) {
+      console.error(err);
+      process.exit(1);
+    }
+  }
+  return fileproperties;
 }
 
 const program = new Command();
@@ -74,14 +89,16 @@ for (let arg of Bun.argv.slice(2)) {
   }
 }
 let fileproperties;
-if (filenames.length == 0){
-    if (Bun.stdin){
-        fileproperties = await doWC([], true);
-    }else{
-        throw new Error("No input was received");
-    }
-}else{
-    fileproperties = await doWC(filenames);
+if (filenames.length == 0) {
+  if (Bun.stdin) {
+    // console.log("Waiting for stdin")
+    // console.log(await Bun.stdin.text())
+    fileproperties = await doWC([], true);
+  } else {
+    throw new Error("No input was received");
+  }
+} else {
+  fileproperties = await doWC(filenames);
 }
 const options: OptionsObject = program.opts();
 
@@ -92,16 +109,24 @@ if (Object.keys(options).length == 0) {
   options.lines = true;
 }
 
-
-
-for(let fileproperty of fileproperties){
-    // Not worry about space formatting inside the output, the correctness is more priority
-    let consoleOutput = "\t" 
-    consoleOutput = options.lines ? consoleOutput.concat(`${fileproperty.lines}\t`) : consoleOutput;
-    consoleOutput = options.words ? consoleOutput.concat(`${fileproperty.words}\t`) : consoleOutput;
-    consoleOutput = options.chars ? consoleOutput.concat(`${fileproperty.chars}\t`) : consoleOutput;
-    consoleOutput = options.bytes ? consoleOutput.concat(`${fileproperty.bytes}\t`) : consoleOutput;
-    consoleOutput = options["max-line-length"] ? consoleOutput.concat(`${fileproperty["max-line-length"]}\t`) : consoleOutput;
-    consoleOutput = consoleOutput.concat(`${fileproperty.filename}`);
-    console.log(consoleOutput);
+for (let fileproperty of fileproperties) {
+  // Not worry about space formatting inside the output, the correctness is more priority
+  let consoleOutput = "\t";
+  consoleOutput = options.lines
+    ? consoleOutput.concat(`${fileproperty.lines}\t`)
+    : consoleOutput;
+  consoleOutput = options.words
+    ? consoleOutput.concat(`${fileproperty.words}\t`)
+    : consoleOutput;
+  consoleOutput = options.chars
+    ? consoleOutput.concat(`${fileproperty.chars}\t`)
+    : consoleOutput;
+  consoleOutput = options.bytes
+    ? consoleOutput.concat(`${fileproperty.bytes}\t`)
+    : consoleOutput;
+  consoleOutput = options["max-line-length"]
+    ? consoleOutput.concat(`${fileproperty["max-line-length"]}\t`)
+    : consoleOutput;
+  consoleOutput = consoleOutput.concat(`${fileproperty.filename}`);
+  console.log(consoleOutput);
 }
