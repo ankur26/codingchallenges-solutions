@@ -10,4 +10,4 @@ This is my attempt at the challenges.
 Each folder will have a build file and a README to explain the solution, also will include test files which are provided by the author, and a test runner.
 
 ## Challenges
-1. Write own `wc` tool - in progress. 
+1. Write own `wc` tool - in progress. [Link](https://github.com/ankur26/codingchallenges-solutions/tree/main/ccwc)
