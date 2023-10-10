@@ -8,16 +8,28 @@ To install dependencies:
 bun install
 ```
 
-To run:
+To run for dev purposes:
 
 ```bash
 bun run prog [OPTIONS] [FILE]
 ```
 
+There is also a standalone executable that you can build for your own platform using:
+
+```bash
+bun build --compile ccwc.ts --outfile=ccwc
+```
+
+Then you can run the commands similar to `wc` but substitute a `./ccwc` instead. 
+
+
 This project was created using `bun init` in bun v1.0.4. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
 
 
 **Status**
-1. File output for all cases outputting in the form of an object
-2. Also able to get options, but have still not parsed output according to it.
-3. Also need to work on getting input redirects from pipes.
+1. Character counts - complete
+2. Line counts - Complete
+3. Word counts - complete
+4. Byte counts - complete
+5. Pipe redirections - Complete
+
