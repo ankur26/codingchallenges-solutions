@@ -1,0 +1,17 @@
+{
+  "name": "ccwc",
+  "module": "ccwc.ts",
+  "type": "module",
+  "scripts": {
+    "prog":"bun ccwc.ts"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "commander": "^11.0.0"
+  }
+}
