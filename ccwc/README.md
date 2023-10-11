@@ -1,4 +1,4 @@
-# ccwc
+# Coding challenges - WC tool (Bun, Typescript)
 ## Requirements
 BunJS needs to be installed
 
