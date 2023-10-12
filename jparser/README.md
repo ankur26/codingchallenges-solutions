@@ -57,4 +57,4 @@ python[3] jparser.py \[Your filename here\]
 - [x] Step 2 - Basic Single key pair
 - [x] Step 3 - Multi key plus value types
 - [x] Step 4 - Nested Objects, Nested Array types
-- [x] Step 5 - Additional test casing to cover official spec
+- [ ] Step 5 - Additional test casing to cover official spec
