@@ -11,4 +11,3 @@ Each folder will have a README to explain how to setup the code on your local de
 
 ## Challenges
 1. Write own `wc` tool - Minimum specified on challenge completed. [Link](https://github.com/ankur26/codingchallenges-solutions/tree/main/ccwc) (Bun, Typescript, standard library only.)
-2. Write own JSON parser - [Link](https://github.com/ankur26/codingchallenges-solutions/tree/main/jparser) (Python3, standard library only.)
