@@ -20,34 +20,37 @@ async def tokenizer(string: str) -> List[str]:
             or string[i] == "["
             or string[i] == "]"
         ):
+            #This is our generic token addition.
             output.append(string[i])
             i += 1
             continue
         elif string[i] == '"':
+            # This is the area that processes a value.
             temp = '"'
             i += 1
-            while string[i] != '"':
+            while string[i]!="," and string[i]!=":": # We should really probably expect a comma here
                 temp += string[i]
                 i += 1
-            temp += string[i]
-            i += 1
             output.append(temp)
             continue
         elif string[i] == "\n" or string[i] == " ":
+            # This is our whitespace and line break ignore section
             i += 1
             continue
         else:
+            # This is the are that processes keys
             temp = ""
             while (
                 string[i] != "}"
+                and string[i] != "]"
                 and string[i] != ","
                 and string[i] != "\n"
                 and string != " "
             ):
                 if (
-                    string[i] == "'"
+                    string[i] == "'" and temp[0] !='"'
                 ):  # We cannot allow single quotes in if it's a string type
-                    print("Invalid string identifier")
+                    print("Invalid token")
                     sys.exit(1)
                 temp += string[i]
                 i += 1
@@ -78,101 +81,114 @@ async def determine_value_type(string: str) -> int | bool | str | float | None:
 async def analyse_syntax(tokens: List):
     current_object = None
     token_stack = []
-    i = 0
     # print(tokens)
-    while i < len(tokens):
+    # We do an intermediate check to ensure that the first part of JSON is actually an { or a [
+    if tokens[0] != "{" and tokens[0] !="[":
+        print("Invalid JSON: should always begin with a { or a [")
+        sys.exit(1)
+    while tokens:
+        token = tokens.pop(0)
         # print(token_stack)
-        if tokens[i] == "[":
-            token_stack.append(tokens[i])
+        if token == "[":
+            token_stack.append(token)
             current_object = []
-        elif tokens[i] == "{":
-            token_stack.append(tokens[i])
+        elif token == "{":
+            token_stack.append(token)
             current_object = {}
-        elif tokens[i] == ":":
-            i += 1
-            if tokens[i] == ",":
-                print("Invalid JSON format, expected key value got empty")
+        elif token == ":":
+            if isinstance(current_object,list):
+                print("Colon cannot be inserted in array")
                 sys.exit(1)
-            if token_stack[-1] == ",":
-                print("Missing key for value")
+            token = tokens.pop(0)
+            if token == ",":
+                print("Invalid JSON: Invalid JSON format, expected key value got empty")
                 sys.exit(1)
-            if tokens[i] == "{":
+            if token_stack and token_stack[-1] == ",":
+                print("Invalid JSON: Missing key for value")
+                sys.exit(1)
+            if token == "{":
                 temp_array = []
-                while not tokens[i] == "}":
-                    temp_array.append(tokens[i])
-                    i += 1
+                while not token == "}":
+                    temp_array.append(token)
+                    token = tokens.pop(0)
                 # double check the value of the token ender is indeed the } bracket
-                if tokens[i] == "}":
-                    temp_array.append(tokens[i])
+                if token == "}":
+                    temp_array.append(token)
                     if isinstance(current_object, dict):
                         current_object[token_stack.pop(-1)] = await analyse_syntax(
                             temp_array
                         )
                     elif isinstance(current_object, list):
                         current_object.append(await analyse_syntax(temp_array))
-                    if token_stack[-1] == ",":
+                    if token_stack and token_stack[-1] == ",":
                         token_stack.pop(-1)
-            elif tokens[i] == "[":
+            elif token == "[":
                 temp_array = []
-                while not tokens[i] == "]":
-                    temp_array.append(tokens[i])
-                    i += 1
-                # double check the value of the token ender is indeed the } bracket
-                if tokens[i] == "]":
-                    temp_array.append(tokens[i])
+                while not token == "]":
+                    temp_array.append(token)
+                    token = tokens.pop(0)
+                # double check the value of the token ender is indeed the ] bracket
+                if token == "]":
+                    temp_array.append(token)
                     if isinstance(current_object, dict):
                         current_object[token_stack.pop(-1)] = await analyse_syntax(
                             temp_array
                         )
                     elif isinstance(current_object, list):
                         current_object.append(await analyse_syntax(temp_array))
-                    if token_stack[-1] == ",":
+                    if token_stack and token_stack[-1] == ",":
                         token_stack.pop(-1)
-            elif tokens[i]:
+            elif token:
                 if isinstance(current_object, dict):
                     current_object[token_stack.pop(-1)] = await determine_value_type(
-                        tokens[i]
+                        token
                     )
                 elif isinstance(current_object, list):
                     current_object.append(
                         await determine_value_type(token_stack.pop(-1))
                     )
                 # If a key value gets added then we should also see that the token stack will probably have a comma value
-                if token_stack[-1] == ",":
+                if token_stack and token_stack[-1] == ",":
                     # If so we can safely pop this
                     token_stack.pop(-1)
-        elif tokens[i] == "}":
+        elif token == "}":
             # We should ideally be left with only 1 value here
-            if token_stack[-1] == "{":
+            if token_stack and token_stack[-1] == "{":
                 token_stack.pop(-1)
-            else:
-                if token_stack[-1] == ",":
-                    print("Extra comma before object ending")
-                if len(token_stack) == 0:
-                    print("missing parenthesis")
+            if token_stack and token_stack[-1] == ",":
+                print("Invalid JSON: Extra comma before object ending")
                 sys.exit(1)
-        elif tokens[i] == ",":
-            token_stack.append(tokens[i])
-        elif tokens[i] == "]":
+            if len(token_stack) == 0:
+                print("Invalid JSON: Extra content or } seems to be added in the end")
+                sys.exit(1)
+        elif token == ",":
+            token_stack.append(token)
+        elif token == "]":
             # we need to ensure that there's no trailing comma
-            if token_stack[-1] == ",":
+            if token_stack and token_stack[-1] == "[":
+                token_stack.pop(-1)
+            if token_stack and token_stack[-1] == ",":
                 print("Extra comma before array entry")
                 sys.exit(1)
-            if token_stack[-1] == "[":
-                token_stack.pop(-1)
-        else:
-            if tokens[i][0] == '"' and tokens[i][-1] == '"' and len(tokens[i]) > 2:
-                if isinstance(current_object, list):
-                    current_object.append(tokens[i].replace('"', ""))
-                elif isinstance(current_object, dict):
-                    token_stack.append(tokens[i].replace('"', ""))
-            else:
-                print("Invalid key value")
+            if len(token_stack) == 0:
+                print("Invalid JSON: Extra ] or content at the end")
                 sys.exit(1)
-        i += 1
-    # if len(token_stack) > 0:
-    #     print("Invalid JSON")
-    # sys.exit(1)
+        else:
+            if token[0] == '"' and token[-1] == '"' and len(token) > 2:
+                if isinstance(current_object, list):
+                    current_object.append(token.replace('"', ""))
+                elif isinstance(current_object, dict):
+                    token_stack.append(token.replace('"', ""))
+            else:
+                print("Invalid JSON: Invalid key value")
+                sys.exit(1)
+    if len(token_stack) > 0:
+        print("Invalid JSON: unknown error")
+        sys.exit(1)
+    print(tokens)
+    if len(tokens) > 0:
+        print("Invalid JSON format: extra content that does not fit.")
+        sys.exit()
     return current_object
 
 
@@ -191,6 +207,7 @@ async def main():
             if not os.path.isdir(arg) and arg.endswith(".json"):
                 files.append(arg)
     for file in files:
+        print(file)
         with open(file, "r") as f:
             stringval = f.read()
             pprint(await analyse_syntax(await tokenizer(stringval)))
