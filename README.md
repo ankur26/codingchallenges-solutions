@@ -6,8 +6,9 @@ This is a set of weekly coding challenges published by [John Crickett](https://u
 This is my attempt at the challenges.
 
 
-## Folder structure (work in progress)
+## Folder structure
 Each folder will have a README to explain how to setup the code on your local device if you want to play around with it, also there will some additional notes to document the learnings of the challenge.
 
 ## Challenges
 1. Write own `wc` tool - Minimum specified on challenge completed. [Link](https://github.com/ankur26/codingchallenges-solutions/tree/main/ccwc) (Bun, Typescript, standard library only.)
+2. Write own `cat` tool - Minimum specified on challenge completed. [Link](https://github.com/ankur26/codingchallenges-solutions/tree/main/cccat) (Java, PicoCLI, Gradle build tool)
