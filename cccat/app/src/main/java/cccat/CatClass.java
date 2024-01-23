@@ -29,17 +29,17 @@ public class CatClass implements Callable<Integer> {
         private String genStringWithLines(String str) {
                 String out;
                 if (includeBlankLineNumbers) {
-                        out = String.format("%d %s", lineNumber,str);
-                        lineNumber+=1;
+                        out = String.format("%d %s", lineNumber, str);
+                        lineNumber += 1;
 
                 } else if (notIncludeBlankLineNumbers) {
-                        if(str.equals("\n")|| str.isBlank() || str.isEmpty()){
+                        if (str.equals("\n") || str.isBlank() || str.isEmpty()) {
                                 out = str;
-                        }else{
-                                out = String.format("%d %s", lineNumber,str);
-                                lineNumber+=1;
+                        } else {
+                                out = String.format("%d %s", lineNumber, str);
+                                lineNumber += 1;
                         }
-                }else{
+                } else {
                         out = str;
                 }
                 return out;
@@ -50,15 +50,26 @@ public class CatClass implements Callable<Integer> {
                         System.out.println("Options -b and -n cannot be used at the same time");
                         return 1;
                 }
-                if (filePaths == null  || filePaths.length == 0) {
+                if (filePaths == null || filePaths.length == 0) {
                         // System.out.println("WE have entered a null file");
                         Scanner scanner = new Scanner(System.in);
                         while (scanner.hasNextLine()) {
                                 System.out.println(genStringWithLines(scanner.nextLine()));
                         }
                         scanner.close();
+                } else if (filePaths.length == 1 && filePaths[0].compareTo("-") == 0) {
+                        // Duplicated code, need to make a better condition, this is special case for
+                        // when the '-'' is entered as a standalone.
+
+                        Scanner scanner = new Scanner(System.in);
+                        while (scanner.hasNextLine()) {
+                                System.out.println(genStringWithLines(scanner.nextLine()));
+                        }
+                        scanner.close();
+
                 } else {
                         // System.out.println("We have a file with us to read");
+
                         for (String filePath : filePaths) {
                                 File file = Paths.get(System.getProperty("user.dir"), filePath).toFile();
                                 BufferedReader br = new BufferedReader(new FileReader(file));
